@@ -1,0 +1,6 @@
+.cache/
+build/
+subprojects/packagecache
+subprojects/glew-*
+subprojects/glfw-*
+subprojects/glm-*
