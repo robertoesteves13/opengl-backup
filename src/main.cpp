@@ -1,4 +1,4 @@
-#include <cstdlib>
+#include <cmath>
 #include <cstring>
 #include <stdio.h>
 
@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 const GLint WIDTH = 800, HEIGHT = 600;
+const float toRadians = M_PI / 180.0f;
 
 GLuint VAO, VBO, shader, uniformModel;
 
@@ -17,6 +18,8 @@ bool direction = true;
 float triOffset = 0.0f;
 float triMaxOffset = 0.7f;
 float triIncrement = 0.005f;
+
+float curAngle = 0.0f;
 
 // Vertex Shader
 static const char* vShader =
@@ -173,13 +176,19 @@ int main() {
         if (abs(triOffset) >= triMaxOffset)
             direction = !direction;
 
+        curAngle += 0.05f;
+        if (curAngle >= 360) {
+            curAngle -= 360;
+        }
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader);
 
         glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
+        model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
         glBindVertexArray(VAO);
