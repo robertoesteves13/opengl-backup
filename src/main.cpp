@@ -12,7 +12,9 @@
 
 const GLint WIDTH = 800, HEIGHT = 600;
 
-GLuint VAO, VBO, shader, uniformModel;
+GLuint VAO, VBO, IBO, shader, uniformModel, uniformProjection;
+
+float curAngle = 0.0f;
 
 // Vertex Shader
 static const char* vShader =
@@ -23,9 +25,10 @@ static const char* vShader =
     "out vec4 vCol;\n"
     "\n"
     "uniform mat4 model;\n"
+    "uniform mat4 projection;\n"
     "\n"
     "void main() {\n"
-    "   gl_Position = model * vec4(pos.x, pos.y, pos.z, 1.0);\n"
+    "   gl_Position = projection * model * vec4(pos.x, pos.y, pos.z, 1.0);\n"
         "vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);\n"
     "}\0";
 
@@ -41,14 +44,26 @@ static const char* fShader =
     "}\0";
 
 void createTriangle() {
+    unsigned int indices[] = {
+        0, 3, 1,
+        1, 3, 2,
+        2, 3, 0,
+        0, 1, 2
+    };
+
     GLfloat vertices[] {
         -1.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 1.0f,
         1.0f, -1.0f, 0.0f,
         0.0f, 1.0f, 0.0f
     };
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
+
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -58,6 +73,7 @@ void createTriangle() {
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
 }
@@ -121,6 +137,7 @@ void compileShaders() {
     }
 
     uniformModel = glGetUniformLocation(shader, "model");
+    uniformProjection = glGetUniformLocation(shader, "projection");
 }
 
 int main() {
@@ -158,28 +175,45 @@ int main() {
         exit(1);
     }
 
+    glEnable(GL_DEPTH_TEST);
+
     glViewport(0, 0, bufferWidth, bufferHeight);
     
     createTriangle();
     compileShaders();
 
+    glm::mat4 projection = glm::perspective(45.0f, (GLfloat) bufferWidth / (GLfloat) bufferHeight, 0.1f, 100.0f);
+
     while(!glfwWindowShouldClose(mainWindow)) {
         glfwPollEvents();
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shader);
 
+        curAngle += 0.1f;
+        if (curAngle >= 360) {
+            curAngle -= 360;
+        }
+
         glm::mat4 model(1.0f);
+
+        float toRadians = M_PI / 180.0;
+
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.5f));
+        model = glm::rotate(model, curAngle * toRadians,  glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 
         glBindVertexArray(VAO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
         glUseProgram(0);
 
