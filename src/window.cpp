@@ -5,6 +5,9 @@ Window::Window() {
     this->width = 800;
     this->height = 600;
 
+    this->xChange = 0;
+    this->yChange = 0;
+
     for (size_t i = 0; i < 1024; ++i) {
         this->keys[i] = false;
     }
@@ -13,6 +16,9 @@ Window::Window() {
 Window::Window(GLint windowWidth, GLint windowHeight) {
     this->width = windowWidth;
     this->height = windowHeight;
+
+    this->xChange = 0;
+    this->yChange = 0;
 
     for (size_t i = 0; i < 1024; ++i) {
         this->keys[i] = false;
