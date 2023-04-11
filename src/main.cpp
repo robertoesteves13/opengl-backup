@@ -1,6 +1,6 @@
-#include "glm/ext/matrix_transform.hpp"
 #include <cmath>
 #include <cstring>
+#include <vector>
 #include <stdio.h>
 
 #include <GL/glew.h>
@@ -10,40 +10,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-const GLint WIDTH = 800, HEIGHT = 600;
+#include "include/mesh.hpp"
+#include "include/shader.hpp"
+#include "include/window.hpp"
 
-GLuint VAO, VBO, IBO, shader, uniformModel, uniformProjection;
+std::vector<Mesh*> meshList;
+std::vector<Shader*> shaderList;
 
 float curAngle = 0.0f;
 
-// Vertex Shader
-static const char* vShader =
-    "#version 330\n" 
-    "\n"
-    "layout (location = 0) in vec3 pos;\n"
-    "\n"
-    "out vec4 vCol;\n"
-    "\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 projection;\n"
-    "\n"
-    "void main() {\n"
-    "   gl_Position = projection * model * vec4(pos.x, pos.y, pos.z, 1.0);\n"
-        "vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);\n"
-    "}\0";
+// You should copy this folder on the same path as the executable
+static const char* vShader = "shaders/vert.glsl";
+static const char* fShader = "shaders/frag.glsl";
 
-static const char* fShader =
-    "#version 330\n" 
-    "\n"
-    "out vec4 colour;\n"
-    "\n"
-    "in vec4 vCol;\n"
-    "\n"
-    "void main() {\n"
-    "   colour = vCol;\n"
-    "}\0";
-
-void createTriangle() {
+void createObjects() {
     unsigned int indices[] = {
         0, 3, 1,
         1, 3, 2,
@@ -57,140 +37,39 @@ void createTriangle() {
         1.0f, -1.0f, 0.0f,
         0.0f, 1.0f, 0.0f
     };
-
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
+    
+    Mesh *obj1 = new Mesh();
+    obj1->createMesh(vertices, indices, 12, 12);
+    meshList.push_back(obj1);
 }
 
-void addShader(GLuint theProgram, const char* shaderCode, GLenum shaderType) {
-    GLuint theShader = glCreateShader(shaderType);
-
-    const GLchar* theCode[1];
-    theCode[0] = shaderCode;
-
-    GLint codeLength[1];
-    codeLength[0] = strlen(shaderCode);
-
-    glShaderSource(theShader, 1, theCode, codeLength);
-    glCompileShader(theShader);
-
-    GLint result = 0;
-    GLchar eLog[1024] = { 0 };
-
-    glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
-
-    if (!result) {
-        glGetShaderInfoLog(shader, sizeof(eLog), NULL, eLog);
-        printf("Error compiling the %d shader: `%s`\n", shaderType, eLog);
-        return;
-    }
-
-    glAttachShader(theProgram, theShader);
-}
-
-void compileShaders() {
-    shader = glCreateProgram();
-
-    if (!shader) {
-        printf("Error creating shader program!");
-        return;
-    }
-
-    addShader(shader, vShader, GL_VERTEX_SHADER);
-    addShader(shader, fShader, GL_FRAGMENT_SHADER);
-
-    GLint result = 0;
-    GLchar eLog[1024] = { 0 };
-
-    glLinkProgram(shader);
-    glGetProgramiv(shader, GL_LINK_STATUS, &result);
-
-    if (!result) {
-        glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
-        printf("Error linking program: `%s`\n", eLog);
-        return;
-    }
-
-    glValidateProgram(shader);
-    glGetProgramiv(shader, GL_VALIDATE_STATUS, &result);
-
-    if (!result) {
-        glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
-        printf("Error validating program: `%s`\n", eLog);
-        return;
-    }
-
-    uniformModel = glGetUniformLocation(shader, "model");
-    uniformProjection = glGetUniformLocation(shader, "projection");
+void createShaders() {
+    Shader *shader1 = new Shader();
+    shader1->createFromFiles(vShader, fShader);
+    shaderList.push_back(shader1);
 }
 
 int main() {
-    if (!glfwInit()) {
-        printf("GLFW initialization failed!\n");
-        glfwTerminate();
-        exit(1);
+    Window mainWindow = Window(800, 600);
+    if (mainWindow.initialize() != 0) {
+        return 1;
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    createObjects();
+    createShaders();
 
-    GLFWwindow *mainWindow = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Course", NULL, NULL);
-    if (!mainWindow) {
-        printf("GLFW mainWindow creation failed!\n");
-        glfwTerminate();
-        exit(1);
-    }
+    GLuint uniformProjection = 0, uniformModel = 0;
+    glm::mat4 projection = glm::perspective(45.0f, (GLfloat) mainWindow.getBufferWidth() / (GLfloat) mainWindow.getBufferHeight(), 0.1f, 100.0f);
 
-    int bufferWidth, bufferHeight;
-    glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
-
-    glfwMakeContextCurrent(mainWindow);
-
-    glewExperimental = GL_TRUE;
-
-    int glewError = glewInit();
-    if (glewError != GLEW_OK) {
-        const unsigned char* msg = glewGetErrorString(glewError);
-        printf("GLEW initialization failed: %s\n", msg);
-        glfwDestroyWindow(mainWindow);
-        glfwTerminate();
-        exit(1);
-    }
-
-    glEnable(GL_DEPTH_TEST);
-
-    glViewport(0, 0, bufferWidth, bufferHeight);
-    
-    createTriangle();
-    compileShaders();
-
-    glm::mat4 projection = glm::perspective(45.0f, (GLfloat) bufferWidth / (GLfloat) bufferHeight, 0.1f, 100.0f);
-
-    while(!glfwWindowShouldClose(mainWindow)) {
+    while(!mainWindow.getShouldClose()) {
         glfwPollEvents();
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shader);
+        shaderList[0]->useShader();
+        uniformModel = shaderList[0]->getModelLocation();
+        uniformProjection = shaderList[0]->getProjectionLocation();
 
         curAngle += 0.1f;
         if (curAngle >= 360) {
@@ -208,16 +87,11 @@ int main() {
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        meshList[0]->renderMesh();
 
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
         glUseProgram(0);
 
-        glfwSwapBuffers(mainWindow);
+        mainWindow.swapBuffers();
     }
 
     return 0;
