@@ -1,5 +1,4 @@
 #include "include/window.hpp"
-#include "GLFW/glfw3.h"
 
 Window::Window() {
     this->width = 800;
@@ -49,12 +48,9 @@ int Window::initialize() {
     this->createCallback();
     glfwSetInputMode(this->mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glewExperimental = GL_TRUE;
 
-    int glewError = glewInit();
-    if (glewError != GLEW_OK) {
-        const unsigned char* msg = glewGetErrorString(glewError);
-        printf("GLEW initialization failed: %s\n", msg);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        printf("GLAD initialization failed!\n");
         glfwDestroyWindow(this->mainWindow);
         glfwTerminate();
         return 1;
