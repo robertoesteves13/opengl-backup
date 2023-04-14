@@ -7,7 +7,6 @@
 
 class Window {
 public:
-    Window();
     Window(GLint windowWidth, GLint windowHeight);
 
     int initialize();
@@ -20,9 +19,13 @@ public:
     GLfloat getXChange();
     GLfloat getYChange();
 
+    bool getMouseGrabbed() { return this->mouseGrabbed; }
+    void setMouseGrabbed(bool value);
+
     bool getShouldClose() { return glfwWindowShouldClose(this->mainWindow); }
 
     void swapBuffers() { glfwSwapBuffers(this->mainWindow); }
+
 
     ~Window(); 
 
@@ -38,9 +41,11 @@ private:
     GLfloat lastY;
     GLfloat xChange;
     GLfloat yChange;
+    bool mouseGrabbed;
     bool mouseFirstMoved;
 
     void createCallback();
     static void handleKeys(GLFWwindow* window, int key, int code, int action, int mode);
-    static void handleMouse(GLFWwindow* window, double xPos, double yPos);
+    static void handleMouseCursor(GLFWwindow* window, double xPos, double yPos);
+    static void handleMouseButton(GLFWwindow* window, int button, int action, int mods);
 };

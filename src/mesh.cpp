@@ -1,4 +1,5 @@
 #include "include/mesh.hpp"
+#include "include/texture.hpp"
 
 Mesh::Mesh() {
     this->VAO = 0;
@@ -7,8 +8,9 @@ Mesh::Mesh() {
     this->indexCount = 0;
 }
 
-void Mesh::createMesh(GLfloat *vertices, unsigned int *indices, unsigned int numOfVertices, unsigned int numOfIndices) {
+void Mesh::createMesh(GLfloat *vertices, unsigned int *indices, unsigned int numOfVertices, unsigned int numOfIndices, Texture& texture) {
     this->indexCount = numOfIndices;
+    this->meshTexture = texture;
 
     glGenVertexArrays(1, &this->VAO);
     glBindVertexArray(this->VAO);
@@ -21,8 +23,10 @@ void Mesh::createMesh(GLfloat *vertices, unsigned int *indices, unsigned int num
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * numOfVertices, vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, (void*)(sizeof(vertices[0]) * 3));
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -31,6 +35,8 @@ void Mesh::createMesh(GLfloat *vertices, unsigned int *indices, unsigned int num
 }
 
 void Mesh::renderMesh() {
+    this->meshTexture.useTexture();
+
     glBindVertexArray(this->VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
     glDrawElements(GL_TRIANGLES, this->indexCount, GL_UNSIGNED_INT, 0);
@@ -38,7 +44,7 @@ void Mesh::renderMesh() {
     glBindVertexArray(0);
 }
 
-void Mesh::clearMesh() {
+Mesh::~Mesh() {
     if (this->IBO != 0) {
         glDeleteBuffers(1, &this->IBO);
         this->IBO = 0;
@@ -55,8 +61,4 @@ void Mesh::clearMesh() {
     }
 
     this->indexCount = 0;
-}
-
-Mesh::~Mesh() {
-    clearMesh();
 }

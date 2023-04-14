@@ -132,3 +132,5 @@ void Shader::createFromFiles(const char* vertexPath, const char* fragmentPath) {
 
     compileShader(vertexCode, fragmentCode);
 }
+
+Shader::~Shader() {}

@@ -1,16 +1,12 @@
 #include "include/camera.hpp"
 #include "glm/ext/quaternion_geometric.hpp"
 
-Camera::Camera() {
-
-}
-
 Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed) {
     this->position = startPosition;
+    this->front = glm::vec3(0.0f, 0.0f, 0.0f);
     this->worldUp = startUp;
     this->yaw = startYaw;
     this->pitch = startPitch;
-    this->front = glm::vec3(0.0f, 0.0f, -1.0f);
 
     this->moveSpeed = startMoveSpeed;
     this->turnSpeed = startTurnSpeed;
@@ -34,6 +30,10 @@ glm::mat4 Camera::calculateViewMatrix() {
 
 void Camera::keyControl(Window* window, GLfloat deltaTime) {
     GLfloat velocity = this->moveSpeed * deltaTime;
+
+    if (window->getKey(GLFW_KEY_ESCAPE)) {
+        window->setMouseGrabbed(false);
+    }
 
     if (window->getKey(GLFW_KEY_W)) {
         this->position += this->front * this->moveSpeed * velocity;

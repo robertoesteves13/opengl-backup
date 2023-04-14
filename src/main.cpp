@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstring>
+#include <memory>
 #include <vector>
 #include <stdio.h>
 
@@ -14,22 +15,27 @@
 #include "include/shader.hpp"
 #include "include/window.hpp"
 #include "include/camera.hpp"
+#include "include/texture.hpp"
 
-std::vector<Mesh*> meshList;
-std::vector<Shader*> shaderList;
+int main() {
+    std::vector<std::unique_ptr<Mesh>> meshList;
+    std::vector<std::unique_ptr<Shader>> shaderList;
 
-float curAngle = 0.0f;
+    float curAngle = 0.0f;
 
-GLfloat deltaTime = 0.0f;
-GLfloat lastTime = 0.0f;
+    GLfloat deltaTime = 0.0f;
+    GLfloat lastTime = 0.0f;
 
-// You should copy this folder on the same path as the executable
-static const char* vShader = "shaders/vert.glsl";
-static const char* fShader = "shaders/frag.glsl";
+    // You should copy this folder on the same path as the executable
+    static const char* vShader = "shaders/vert.glsl";
+    static const char* fShader = "shaders/frag.glsl";
 
-Camera camera;
+    Window mainWindow = Window(800, 600);
+    if (mainWindow.initialize() != 0) {
+        return 1;
+    }
 
-void createObjects() {
+    // Create Objects
     unsigned int indices[] = {
         0, 3, 1,
         1, 3, 2,
@@ -38,33 +44,25 @@ void createObjects() {
     };
 
     GLfloat vertices[] {
-        -1.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, -1.0f, 1.0f, 0.5f, 0.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.5f, 1.0f
     };
-    
-    Mesh *obj1 = new Mesh();
-    obj1->createMesh(vertices, indices, 12, 12);
-    meshList.push_back(obj1);
-}
 
-void createShaders() {
-    Shader *shader1 = new Shader();
+    std::unique_ptr<Texture> meshTexture = std::make_unique<Texture>(Texture("resources/brick-02.png"));
+    meshTexture->loadTexture();
+
+    std::unique_ptr<Mesh> obj1 = std::make_unique<Mesh>(Mesh());
+    obj1->createMesh(vertices, indices, 20, 12, *meshTexture);
+    meshList.push_back(std::move(obj1));
+
+    // Create Shaders
+    std::unique_ptr<Shader> shader1 = std::make_unique<Shader>(Shader());
     shader1->createFromFiles(vShader, fShader);
-    shaderList.push_back(shader1);
-}
+    shaderList.push_back(std::move(shader1));
 
-int main() {
-    Window mainWindow = Window(800, 600);
-    if (mainWindow.initialize() != 0) {
-        return 1;
-    }
-
-    createObjects();
-    createShaders();
-
-    camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f, 1.25f, 0.25f);
+    std::unique_ptr<Camera> camera = std::make_unique<Camera>(Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f, 1.25f, 0.25f));
 
     GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat) mainWindow.getBufferWidth() / (GLfloat) mainWindow.getBufferHeight(), 0.1f, 100.0f);
@@ -76,8 +74,10 @@ int main() {
 
         glfwPollEvents();
 
-        camera.keyControl(&mainWindow, deltaTime);
-        camera.mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
+        camera->keyControl(&mainWindow, deltaTime);
+        if (mainWindow.getMouseGrabbed()) {
+            camera->mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
+        }
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -94,15 +94,9 @@ int main() {
 
         glm::mat4 model(1.0f);
 
-        float toRadians = M_PI / 180.0;
-
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.5f));
-        model = glm::rotate(model, curAngle * toRadians,  glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
+        glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
 
         meshList[0]->renderMesh();
 
@@ -111,5 +105,7 @@ int main() {
         mainWindow.swapBuffers();
     }
 
+    meshList.clear();
+    shaderList.clear();
     return 0;
 }
