@@ -12,7 +12,8 @@ glm_dep = glm_proj.get_variable('glm_dep')
 glad_dep = glad_proj.get_variable('glad_dep')
 stb_image_dep = stb_image_proj.get_variable('stb_image_dep')
 
-sources = [ 'src/main.cpp', 'src/mesh.cpp', 'src/shader.cpp', 'src/window.cpp', 'src/camera.cpp', 'src/texture.cpp']
+sources = [ 'src/main.cpp', 'src/mesh.cpp', 'src/shader.cpp', 'src/window.cpp',
+            'src/camera.cpp', 'src/texture.cpp', 'src/light.cpp']
 
 # Setup symlink
 setup = find_program('setup.py')

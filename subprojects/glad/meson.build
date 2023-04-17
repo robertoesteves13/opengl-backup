@@ -3,7 +3,7 @@ project('glad', 'c')
 inc = include_directories('include')
 sources = [ 'src/glad.c' ]
 
-glad_lib = library('glad', 
+glad_lib = static_library('glad', 
   sources,
   include_directories: inc
 )

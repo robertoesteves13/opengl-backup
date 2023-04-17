@@ -16,6 +16,7 @@
 #include "include/window.hpp"
 #include "include/camera.hpp"
 #include "include/texture.hpp"
+#include "include/light.hpp"
 
 int main() {
     std::vector<std::unique_ptr<Mesh>> meshList;
@@ -50,6 +51,8 @@ int main() {
         0.0f, 1.0f, 0.0f, 0.5f, 1.0f
     };
 
+    Light mainLight(1.0f, 1.0f, 1.0f, 0.66f);
+
     std::unique_ptr<Texture> meshTexture = std::make_unique<Texture>(Texture("resources/brick-02.png"));
     meshTexture->loadTexture();
 
@@ -64,7 +67,7 @@ int main() {
 
     std::unique_ptr<Camera> camera = std::make_unique<Camera>(Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f, 1.25f, 0.25f));
 
-    GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
+    GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformAmbientIntensity = 0, uniformAmbientColour = 0;
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat) mainWindow.getBufferWidth() / (GLfloat) mainWindow.getBufferHeight(), 0.1f, 100.0f);
 
     while(!mainWindow.getShouldClose()) {
@@ -86,6 +89,10 @@ int main() {
         uniformModel = shaderList[0]->getModelLocation();
         uniformProjection = shaderList[0]->getProjectionLocation();
         uniformView = shaderList[0]->getViewLocation();
+        uniformAmbientIntensity = shaderList[0]->getAmbientIntensityLocation();
+        uniformAmbientColour = shaderList[0]->getAmbientColourLocation();
+
+        mainLight.useLight(uniformAmbientIntensity, uniformAmbientColour);
 
         curAngle += 0.1f;
         if (curAngle >= 360) {
