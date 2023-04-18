@@ -17,7 +17,7 @@ Window::Window(GLint windowWidth, GLint windowHeight) {
     this->width = windowWidth;
     this->height = windowHeight;
     this->mouseFirstMoved = true;
-    this->mouseGrabbed = true;
+    this->mouseGrabbed = false;
 
     this->xChange = 0.0f;
     this->yChange = 0.0f;
@@ -82,7 +82,6 @@ void Window::createCallback() {
     glfwSetKeyCallback(this->mainWindow, handleKeys);
     glfwSetCursorPosCallback(this->mainWindow, handleMouseCursor);
     glfwSetMouseButtonCallback(this->mainWindow, handleMouseButton);
-    glfwSetInputMode(this->mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Window::updateSize() {
