@@ -1,5 +1,9 @@
 #pragma once
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include <stdio.h>
 
 #include <glad/glad.h>
@@ -16,11 +20,16 @@ public:
 
     bool getKey(int code) { return this->keys[code]; }
 
+    void updateSize();
+
     GLfloat getXChange();
     GLfloat getYChange();
 
     bool getMouseGrabbed() { return this->mouseGrabbed; }
     void setMouseGrabbed(bool value);
+
+    void beginUi();
+    void drawUi();
 
     bool getShouldClose() { return glfwWindowShouldClose(this->mainWindow); }
 

@@ -4,19 +4,21 @@
 #include <vector>
 #include <stdio.h>
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <imgui.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "glm/ext/matrix_transform.hpp"
 #include "include/mesh.hpp"
 #include "include/shader.hpp"
 #include "include/window.hpp"
 #include "include/camera.hpp"
 #include "include/texture.hpp"
 #include "include/light.hpp"
+
+const float toRadians = M_PI / 180.0f;
 
 int main() {
     std::vector<std::unique_ptr<Mesh>> meshList;
@@ -70,6 +72,8 @@ int main() {
     GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformAmbientIntensity = 0, uniformAmbientColour = 0;
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat) mainWindow.getBufferWidth() / (GLfloat) mainWindow.getBufferHeight(), 0.1f, 100.0f);
 
+    GLfloat scaleFactor = 1.0f, xPos = 0.0f, yPos = 0.0f, zPos = 0.0f, xRotation = 0.0f, yRotation = 0.0f, zRotation = 0.0f;
+
     while(!mainWindow.getShouldClose()) {
         GLfloat now = glfwGetTime();
         deltaTime = now - lastTime;
@@ -82,6 +86,26 @@ int main() {
             camera->mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
         }
 
+
+        mainWindow.updateSize();
+        mainWindow.beginUi();
+
+        ImGui::Begin("Debug");
+        mainLight.debugLight();
+
+        ImGui::SeparatorText("Transforms");
+        ImGui::SliderFloat("Scale", &scaleFactor, 0.0f, 10.0f);
+
+        ImGui::SliderFloat("xPos", &xPos, -10.0f, 10.0f);
+        ImGui::SliderFloat("yPos", &yPos, -10.0f, 10.0f);
+        ImGui::SliderFloat("zPos", &zPos, -10.0f, 10.0f);
+
+        ImGui::SliderFloat("xRotation", &xRotation, 0.0f, 360.0f);
+        ImGui::SliderFloat("yRotation", &yRotation, 0.0f, 360.0f);
+        ImGui::SliderFloat("zRotation", &zRotation, 0.0f, 360.0f);
+
+        ImGui::End();
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -92,6 +116,7 @@ int main() {
         uniformAmbientIntensity = shaderList[0]->getAmbientIntensityLocation();
         uniformAmbientColour = shaderList[0]->getAmbientColourLocation();
 
+
         mainLight.useLight(uniformAmbientIntensity, uniformAmbientColour);
 
         curAngle += 0.1f;
@@ -101,11 +126,21 @@ int main() {
 
         glm::mat4 model(1.0f);
 
+        model = glm::translate(model, glm::vec3(xPos, yPos, zPos));
+
+        model = glm::rotate(model, xRotation * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, yRotation * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, zRotation * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        model = glm::scale(model, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
+
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
 
         meshList[0]->renderMesh();
+
+        mainWindow.drawUi();
 
         glUseProgram(0);
 

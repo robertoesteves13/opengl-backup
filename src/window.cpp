@@ -1,6 +1,7 @@
 #include "include/window.hpp"
-#include "GLFW/glfw3.h"
+
 #include <iostream>
+
 void glMsgCallback( GLenum source,
                  GLenum type,
                  GLuint id,
@@ -40,7 +41,7 @@ int Window::initialize() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);  
 
     glfwWindowHint(GLFW_FLOATING, true);  
-    glfwWindowHint(GLFW_RESIZABLE, false);  
+    glfwWindowHint(GLFW_RESIZABLE, true);  
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, true);  
 
 
@@ -66,6 +67,13 @@ int Window::initialize() {
 
     glViewport(0, 0, this->bufferWidth, this->bufferHeight);
     glfwSetWindowUserPointer(this->mainWindow, this);
+    
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(this->mainWindow, true);
+    ImGui_ImplOpenGL3_Init("#version 460");
 
     return 0;
 }
@@ -77,6 +85,10 @@ void Window::createCallback() {
     glfwSetInputMode(this->mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
+void Window::updateSize() {
+    glfwGetFramebufferSize(this->mainWindow, &this->bufferWidth, &this->bufferHeight);
+    glViewport(0, 0, this->bufferWidth, this->bufferHeight);
+}
 
 GLfloat Window::getXChange() {
     GLfloat theChange = this->xChange;
@@ -120,6 +132,17 @@ void Window::setMouseGrabbed(bool value) {
     }
 }
 
+void Window::beginUi() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void Window::drawUi() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void Window::handleMouseCursor(GLFWwindow* window, double xPos, double yPos) {
     Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
@@ -137,7 +160,7 @@ void Window::handleMouseCursor(GLFWwindow* window, double xPos, double yPos) {
 }
 
 void Window::handleMouseButton(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
         Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
         theWindow->setMouseGrabbed(true);
     }
@@ -145,6 +168,10 @@ void Window::handleMouseButton(GLFWwindow* window, int button, int action, int m
 }
 
 Window::~Window() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwDestroyWindow(this->mainWindow);
     glfwTerminate();
 }

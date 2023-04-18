@@ -1,6 +1,8 @@
 #include "include/mesh.hpp"
 #include "include/texture.hpp"
 
+#include <imgui.h>
+
 Mesh::Mesh() {
     this->VAO = 0;
     this->VBO = 0;
