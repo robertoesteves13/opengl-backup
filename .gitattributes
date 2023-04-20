@@ -1,2 +1,2 @@
 subprojects/glad/** linguist-generated
-subprojects/stb_image/** linguist-vendored
+vendor/** linguist-vendored

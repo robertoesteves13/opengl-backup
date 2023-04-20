@@ -1,7 +1,7 @@
 #include "include/texture.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <vendor/stb_image.h>
 
 Texture::Texture() {
     this->textureId = 0;

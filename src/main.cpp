@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdio.h>
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,7 +18,7 @@
 #include "include/texture.hpp"
 #include "include/light.hpp"
 
-const float toRadians = M_PI / 180.0f;
+const float toRadians = 3.1415f / 180.0f;
 
 int main() {
     std::vector<std::unique_ptr<Mesh>> meshList;
@@ -93,7 +93,7 @@ int main() {
         ImGui::Begin("Debug");
         mainLight.debugLight();
 
-        ImGui::Separator();
+        ImGui::SeparatorText("Transform");
         ImGui::SliderFloat("Scale", &scaleFactor, 0.0f, 10.0f);
 
         ImGui::SliderFloat("xPos", &xPos, -10.0f, 10.0f);

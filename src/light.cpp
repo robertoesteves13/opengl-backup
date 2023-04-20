@@ -1,5 +1,5 @@
 #include "include/light.hpp"
-#include "imgui/imgui.h"
+#include "imgui.h"
 
 Light::Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity) {
     this->colour = glm::vec3(red, green, blue);
@@ -7,7 +7,7 @@ Light::Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity) {
 }
 
 void Light::debugLight() {
-    ImGui::Separator();
+    ImGui::SeparatorText("Light");
     ImGui::SliderFloat("Red", &this->colour.x, 0.0f, 1.0f);
     ImGui::SliderFloat("Green", &this->colour.y, 0.0f, 1.0f);
     ImGui::SliderFloat("Blue", &this->colour.z, 0.0f, 1.0f);
