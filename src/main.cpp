@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdio.h>
 
-#include <imgui.h>
+#include <imgui/imgui.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -93,7 +93,7 @@ int main() {
         ImGui::Begin("Debug");
         mainLight.debugLight();
 
-        ImGui::SeparatorText("Transforms");
+        ImGui::Separator();
         ImGui::SliderFloat("Scale", &scaleFactor, 0.0f, 10.0f);
 
         ImGui::SliderFloat("xPos", &xPos, -10.0f, 10.0f);
@@ -127,12 +127,12 @@ int main() {
         glm::mat4 model(1.0f);
 
         model = glm::translate(model, glm::vec3(xPos, yPos, zPos));
+        model = glm::scale(model, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
 
         model = glm::rotate(model, xRotation * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, yRotation * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::rotate(model, zRotation * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
 
-        model = glm::scale(model, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
 
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
